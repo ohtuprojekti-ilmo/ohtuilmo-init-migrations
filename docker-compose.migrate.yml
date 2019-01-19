@@ -2,8 +2,7 @@ version: '2'
 
 services:
   migrate:
-    image: ohtuprojektiilmo/initmigrations
-    build: ./ohtuilmo-init-migrations
+    image: cxcorp/ohtu-initmigrations
     depends_on:
       - db
     environment:
