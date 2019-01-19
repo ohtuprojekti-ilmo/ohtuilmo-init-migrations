@@ -42,3 +42,11 @@ need to run the first migration.
 6. Press `y` + `enter` to allow the script to start dropping tables and running migrations
 7. ???
 8. profit
+
+## Environment variables
+
+- `DB_HOST` (*defaults to `"db"`*)
+- `DB_PORT` (*defaults to `"5432"`*)
+- `DB_USERNAME` (*defaults to `"postgres"`*)
+- `DB_NAME` (*defaults to `"postgres"`*)
+
