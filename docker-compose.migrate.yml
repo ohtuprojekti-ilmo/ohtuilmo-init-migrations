@@ -1,0 +1,20 @@
+version: '2'
+
+services:
+  migrate:
+    image: ohtuprojektiilmo/initmigrations
+    build: ./ohtuilmo-init-migrations
+    depends_on:
+      - db
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./data/backup:/data/backup
+
+  db:
+    image: postgres:10.6
+    restart: always
+    environment:
+      PGDATA: /data/pg_data/ohtuilmo_db
+    volumes:
+      - /data/pg_data/ohtuilmo_db:/data/pg_data/ohtuilmo_db

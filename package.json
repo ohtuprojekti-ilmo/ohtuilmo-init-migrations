@@ -1,0 +1,13 @@
+{
+  "name": "ohtuilmo-init-migrations",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "cxcorp",
+  "license": "MIT",
+  "dependencies": {
+    "pg": "^7.8.0",
+    "sequelize": "^4.42.0",
+    "sequelize-cli": "^5.4.0"
+  }
+}
