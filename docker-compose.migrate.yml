@@ -9,7 +9,7 @@ services:
     environment:
       - NODE_ENV=production
     volumes:
-      - ./data/backup:/data/backup
+      - /data/backup:/data/backup
 
   db:
     image: postgres:10.6
