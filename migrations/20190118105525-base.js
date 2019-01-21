@@ -1,3 +1,4 @@
+// eslint-disable-next-line semi
 'use strict'
 
 /*
@@ -24,6 +25,11 @@ module.exports = {
         ? ['createdAt', 'updatedAt']
         : ['created_at', 'updated_at']
 
+      /*
+       * Map the fieldNames array into an array of objects
+       * where the field name is the key and timetampType is the value
+       * ['foo', 'bar'] --> [ {foo: timestampType, bar: timestampType} ]
+       */
       return fieldNames.reduce(
         (opts, name) => ({
           ...opts,
