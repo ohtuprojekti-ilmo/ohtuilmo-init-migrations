@@ -1,14 +1,18 @@
 // eslint-disable-next-line semi
-'use strict'
+'use strict';
 
 /*
- * This base migration attempts to map the schema produced by the
- * sequelize models. An oddity here is that **some** models use
- * the "underscore: true" option, whereas some don't.
+ * This base migration attempts to create an 1:1 schema with the schema on the
+ * current production server. The schema **DOES NOT MATCH** the schema created
+ * by Sequelize from the models, because it does not match production's schema!
+ * The next migration fixes this.
+ *
+ * An oddity here is that **some** models use snake_case and some camelCase, and
+ * some use the "underscore: true" option, whereas some don't.
  * As a result, **some** tables have createdAt and some created_at, etc.
  * Some foreign key associations also use underscores, whereas some use camelCase.
  *
- * Another migration will address this issue.
+ * Another change should address this change as a migration and model update.
  */
 
 module.exports = {
@@ -82,8 +86,7 @@ module.exports = {
         // sequelize timestamps
         ...createTimestampColumns({ camelCase: false }),
         // foreign keys for associations
-        student_number: Sequelize.STRING(255),
-        group_id: Sequelize.INTEGER
+        student_number: Sequelize.STRING
       }),
       query.createTable('registration_question_sets', {
         id: {
@@ -169,7 +172,24 @@ module.exports = {
     await Promise.all(tableCreationPromises)
 
     // tables created, add association
-    const addForeignKey = (constraintName, targetTable, referencedTable) => {
+
+    /*
+     * Sequelize's model constrains, by default, add
+     * - ON UPDATE CASCADE
+     * - ON DELETE SET NULL
+     * However, the production schema has one relation with ON DELETE CASCADE...
+     */
+    const defaultOnDeleteAndUpdate = {
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL'
+    }
+
+    const addForeignKey = (
+      constraintName,
+      targetTable,
+      referencedTable,
+      onDeleteAndUpdate = defaultOnDeleteAndUpdate
+    ) => {
       const [table, field] = targetTable
       const [foreignTable, foreignField] = referencedTable
 
@@ -180,8 +200,8 @@ module.exports = {
           table: foreignTable,
           field: foreignField
         },
-        onUpdate: 'CASCADE', // Sequelize's model constraints add these
-        onDelete: 'SET NULL' // ON CASCADEs and ON DELETEs by default
+        onUpdate: onDeleteAndUpdate.onUpdate,
+        onDelete: onDeleteAndUpdate.onDelete
       })
     }
 
@@ -203,14 +223,13 @@ module.exports = {
       ['review_question_sets', 'id']
     )
     await addForeignKey(
-      'memberships_group_id_fkey',
-      ['memberships', 'group_id'],
-      ['groups', 'id']
-    )
-    await addForeignKey(
-      'memberships_student_number_fkey',
-      ['memberships', 'student_number'],
-      ['users', 'student_number']
+      'memberships_id_fkey',
+      ['memberships', 'id'],
+      ['groups', 'id'],
+      {
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE' // Production schema's single constraint oddity.
+      }
     )
     await addForeignKey(
       'registrations_configuration_id_fkey',
@@ -248,8 +267,7 @@ module.exports = {
         table: 'configurations',
         constraint: 'configurations_review_question_set_2_id_fkey'
       },
-      { table: 'memberships', constraint: 'memberships_group_id_fkey' },
-      { table: 'memberships', constraint: 'memberships_student_number_fkey' },
+      { table: 'memberships', constraint: 'memberships_id_fkey' },
       {
         table: 'registrations',
         constraint: 'registrations_configuration_id_fkey'

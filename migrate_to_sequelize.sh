@@ -25,13 +25,26 @@ function do_migration() {
     psql --host="$PG_HOST" --port="$PG_PORT" --username="$PG_USERNAME" --dbname="template1" -c "CREATE DATABASE $PG_DB";
 
     echo 'Created, migrating...'
+
+    # Hax: Since the production db schema only matches with the -base migration,
+    #      only run the base migration, then restore backup, then run the last
+    #      migration.
+
+    # move last migration away
+    mv /app/migrations/20190124162750-match_schema_with_sequelize.js /app/20190124162750-match_schema_with_sequelize.js
+    # run base migration
     node_modules/.bin/sequelize db:migrate
 
-    echo 'Database initialized, restoring data backup...'
+    echo 'Database initialized to match production schema, restoring data backup...'
     psql --host="$PG_HOST" --port="$PG_PORT" --dbname="$PG_DB" --username="$PG_USERNAME" -f "$BACKUP_DATA_FILE"
-
+    
     echo "Database data restored. Removing temporary data dump ($BACKUP_DATA_FILE)."
     rm "$BACKUP_DATA_FILE"
+
+    echo 'Running migration to normalize schema with what Sequelize models expect'
+    # run rest of migrations
+    mv /app/20190124162750-match_schema_with_sequelize.js /app/migrations/20190124162750-match_schema_with_sequelize.js
+    node_modules/.bin/sequelize db:migrate
 
     echo 'Migration complete!'
 }
